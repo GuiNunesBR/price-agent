@@ -31,7 +31,7 @@ Cada produto monitorado deve conter:
 - marca;
 - modelo, quando existir;
 - categoria;
-- preco-alvo;
+- faixa de preco para alerta;
 - palavras-chave obrigatorias;
 - palavras-chave proibidas;
 - prioridade;
@@ -41,13 +41,13 @@ Cada produto monitorado deve conter:
 
 O MVP deve:
 
-- buscar ofertas em 2 ou 3 fontes iniciais;
+- buscar ofertas nas fontes iniciais priorizadas;
 - extrair titulo, preco, loja, link, fonte e data;
 - validar se o titulo parece corresponder ao produto;
 - descartar resultados com palavras proibidas;
 - calcular um score simples;
 - salvar resultados localmente;
-- gerar alerta quando houver oportunidade.
+- gerar alerta quando o preco estiver dentro da faixa configurada ou cair 15% em relacao ao menor preco anterior.
 
 ### Saida
 
@@ -55,17 +55,22 @@ O MVP deve entregar:
 
 - registro das ofertas encontradas;
 - melhor preco por produto;
-- alerta quando uma oferta atingir o preco-alvo;
-- resumo pronto para ser enviado ou sincronizado com o Notion.
+- preco medio por produto;
+- alerta quando uma oferta entrar na faixa configurada;
+- resumo pronto para ser sincronizado com o Notion.
 
 ## Fontes iniciais candidatas
 
 As fontes devem ser escolhidas pela estabilidade e qualidade dos dados. A ordem inicial sugerida:
 
-1. Zoom ou Buscape, quando a pagina publica permitir leitura estavel.
-2. Mercado Livre.
-3. Amazon.
-4. Kabum ou Magalu para categorias especificas.
+1. Zoom.
+2. Buscape.
+3. JaCotei.
+4. Mercado Livre.
+5. Amazon.
+6. Casas Bahia.
+7. Magalu.
+8. Kabum.
 
 Observacao: comparadores como Zoom e Buscape sao bons porque ja fazem parte da curadoria, mas podem ter bloqueios, mudancas de HTML ou restricoes. O projeto deve tratar cada fonte como adaptador isolado.
 
@@ -81,7 +86,7 @@ Campos sugeridos:
 - Marca;
 - Modelo;
 - Categoria;
-- Preco-alvo;
+- Faixa de preco;
 - Prioridade;
 - Status;
 - Ultima verificacao;
@@ -162,7 +167,7 @@ Para manter o MVP pequeno, ficam fora da primeira fase:
 
 ### Fase 1
 
-MVP com busca em poucas fontes, score simples, SQLite e Telegram.
+MVP com cadastro em `products.json`, SQLite, historico de ofertas e score simples. Telegram fica fora do MVP inicial.
 
 ### Fase 2
 

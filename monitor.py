@@ -6,14 +6,14 @@ from pathlib import Path
 from apscheduler.schedulers.blocking import BlockingScheduler
 from dotenv import load_dotenv
 
-from database import create_db, get_last_price, save_price
+from database import create_db, get_last_price, save_price, upsert_product
 from notifier import send_drop_alert, send_scrape_error, send_target_alert
 from scrapers import get_price
 
 load_dotenv()
 
 PRODUCTS_FILE = Path(__file__).parent / "products.json"
-DROP_THRESHOLD_PCT = 5.0
+DROP_THRESHOLD_PCT = 15.0
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,8 +29,18 @@ def load_products() -> list[dict]:
 
 def check_product(item: dict) -> None:
     name = item["name"]
-    url = item["url"]
-    target = float(item["target_price"])
+    upsert_product(item)
+
+    url = item.get("url")
+    price_range = item.get("target_price_range") or {}
+    target = float(item.get("target_price", price_range.get("max", 0)))
+
+    if not url:
+        log.info(
+            "%s cadastrado no SQLite. Busca por fontes ainda sera implementada.",
+            name,
+        )
+        return
 
     log.info("Buscando preço: %s", name)
     price = get_price(url)

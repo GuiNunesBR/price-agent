@@ -1,4 +1,4 @@
-"""Consultas rápidas ao histórico (base para RAG/agente depois)."""
+"""Consultas rapidas ao historico de precos."""
 
 import argparse
 import sys
@@ -6,7 +6,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from database import create_db, get_min_price_days
+from database import create_db, get_price_stats
+
+
+def money(value: float | None) -> str:
+    if value is None:
+        return "-"
+    return f"R$ {value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
 def main() -> None:
@@ -16,14 +22,16 @@ def main() -> None:
     args = parser.parse_args()
 
     create_db()
-    minimum = get_min_price_days(args.product, args.days)
-    if minimum is None:
-        print(f"Sem histórico para '{args.product}' nos últimos {args.days} dias.")
+    stats = get_price_stats(args.product, args.days)
+    if stats["samples"] == 0:
+        print(f"Sem historico para '{args.product}' nos ultimos {args.days} dias.")
         return
-    print(
-        f"Menor preço de '{args.product}' nos últimos {args.days} dias: "
-        f"R$ {minimum:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    )
+
+    print(f"Historico de '{args.product}' nos ultimos {args.days} dias")
+    print(f"Amostras: {stats['samples']}")
+    print(f"Menor preco: {money(stats['minimum'])}")
+    print(f"Preco medio: {money(stats['average'])}")
+    print(f"Maior preco: {money(stats['maximum'])}")
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ Exemplo de entrada:
 
 ```text
 Produto: Geladeira Electrolux Inverter modelo XYZ
-Preco-alvo: R$ 3.200
+Faixa de alerta: R$ 3.500 a R$ 4.200
 Palavras obrigatorias: Electrolux, Inverter, XYZ
 Palavras proibidas: usado, recondicionado
 Prioridade: alta
@@ -30,9 +30,10 @@ Prioridade: alta
 A base atual ja possui:
 
 - historico SQLite;
+- cadastro local de produtos no SQLite;
 - scrapers por loja com Playwright/Brave;
 - alertas via Telegram ou console;
-- cadastro simples em `products.json`;
+- cadastro em `products.json` com faixa de preco;
 - consulta de historico por `query.py`.
 
 Essa base sera reorganizada para suportar descoberta de ofertas, comparacao entre fontes e relatorios no Notion.
@@ -60,7 +61,7 @@ Os "agentes" comecam como modulos simples e podem evoluir para orquestracao mais
 - Filtrar falsos positivos basicos.
 - Gerar score simples.
 - Salvar resultado em SQLite.
-- Alertar via Telegram quando `preco <= preco-alvo`.
+- Alertar quando o preco estiver dentro da faixa configurada ou cair 15% em relacao ao menor preco anterior.
 
 ### Fase 2: Notion como painel
 
@@ -95,6 +96,7 @@ price-agent/
 |-- notifier.py        # Telegram / console
 |-- database.py        # SQLite
 |-- query.py           # consulta menor preco
+|-- setup_db.py        # inicializa SQLite e cadastra produtos
 |-- scrapers/
 |   |-- amazon.py
 |   |-- mercado_livre.py
@@ -117,11 +119,39 @@ python -m venv .venv
 pip install -r requirements.txt
 playwright install chromium
 copy .env.example .env
+python setup_db.py
 ```
 
 Scrapers rodam no Brave via Playwright. Se o Brave estiver em outro caminho, configure `BRAVE_EXECUTABLE_PATH` no `.env`.
 
+## Produto monitorado
+
+Formato atual do `products.json`:
+
+```json
+{
+  "name": "Geladeira Frost Free",
+  "brand": "Brastemp",
+  "model": "bro85mb",
+  "target_price_range": {
+    "min": 3500,
+    "max": 4200
+  },
+  "required_keywords": ["geladeira", "brastemp", "frost"],
+  "blocked_keywords": ["usado", "recondicionado"],
+  "priority": "alta",
+  "sources": ["zoom", "buscape", "jacotei", "mercado_livre", "amazon", "casas_bahia", "magalu", "kabum"],
+  "status": "active"
+}
+```
+
 ## Uso atual
+
+Inicializar ou atualizar produtos no SQLite:
+
+```powershell
+python setup_db.py
+```
 
 Execucao unica:
 
@@ -138,7 +168,7 @@ python monitor.py --schedule
 Consulta historico:
 
 ```powershell
-python query.py "PS5 Slim" --days 30
+python query.py "Geladeira Frost Free" --days 30
 ```
 
 ## Proximos passos imediatos

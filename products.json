@@ -1,12 +1,25 @@
 [
   {
-    "name": "RTX 5070",
-    "url": "https://www.kabum.com.br/produto/exemplo",
-    "target_price": 3500
-  },
-  {
-    "name": "PS5 Slim",
-    "url": "https://produto.mercadolivre.com.br/exemplo",
-    "target_price": 2800
+    "name": "Geladeira Frost Free",
+    "brand": "Brastemp",
+    "model": "bro85mb",
+    "target_price_range": {
+      "min": 3500,
+      "max": 4200
+    },
+    "required_keywords": ["geladeira", "brastemp", "frost"],
+    "blocked_keywords": ["usado", "recondicionado"],
+    "priority": "alta",
+    "sources": [
+      "zoom",
+      "buscape",
+      "jacotei",
+      "mercado_livre",
+      "amazon",
+      "casas_bahia",
+      "magalu",
+      "kabum"
+    ],
+    "status": "active"
   }
 ]

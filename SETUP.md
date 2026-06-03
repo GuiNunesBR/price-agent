@@ -46,11 +46,20 @@ python -m venv .venv
 pip install -r requirements.txt
 playwright install chromium
 copy .env.example .env
+python setup_db.py
 ```
 
-Edite `products.json` com os produtos atuais. No MVP futuro, esse arquivo deve evoluir para incluir nome do produto, marca, modelo, preco-alvo, palavras obrigatorias e palavras proibidas.
+Edite `products.json` com os produtos atuais. O formato atual inclui nome do produto, marca, modelo, faixa de preco, palavras obrigatorias, palavras proibidas e fontes desejadas.
 
-### Telegram (opcional)
+Para recriar ou atualizar os produtos cadastrados no SQLite depois de editar `products.json`, rode:
+
+```powershell
+python setup_db.py
+```
+
+### Telegram (opcional, legado)
+
+A integracao com telefone deve acontecer via Notion futuramente. O Telegram fica como opcao tecnica legada do projeto atual.
 
 1. Fale com [@BotFather](https://t.me/BotFather) → `/newbot` → copie o token.
 2. Envie uma mensagem ao seu bot; descubra o `chat_id` com [@userinfobot](https://t.me/userinfobot) ou a API `getUpdates`.
