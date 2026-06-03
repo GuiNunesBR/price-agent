@@ -97,6 +97,8 @@ price-agent/
 |-- database.py        # SQLite
 |-- query.py           # consulta menor preco
 |-- setup_db.py        # inicializa SQLite e cadastra produtos
+|-- inspect_db.py      # mostra produtos, ofertas e alertas
+|-- record_offer.py    # registra oferta manual para teste/MVP
 |-- scrapers/
 |   |-- amazon.py
 |   |-- mercado_livre.py
@@ -151,6 +153,18 @@ Inicializar ou atualizar produtos no SQLite:
 
 ```powershell
 python setup_db.py
+```
+
+Inspecionar o banco:
+
+```powershell
+python inspect_db.py
+```
+
+Registrar uma oferta manualmente:
+
+```powershell
+python record_offer.py "Geladeira Frost Free" --title "Geladeira Brastemp Frost Free BRO85MB" --price 3999 --source manual --store "Loja Teste" --url "https://example.com/oferta"
 ```
 
 Execucao unica:

@@ -263,3 +263,34 @@ def get_price_stats(product: str, days: int = 30) -> dict[str, float | int | Non
         "average": row["average"] if row else None,
         "maximum": row["maximum"] if row else None,
     }
+
+
+def get_product(name: str) -> dict | None:
+    conn = connect()
+    row = conn.execute(
+        """
+        SELECT
+            name, brand, model, target_min, target_max, required_keywords,
+            blocked_keywords, priority, sources, status
+        FROM products
+        WHERE name = ?
+        """,
+        (name,),
+    ).fetchone()
+    conn.close()
+    if row is None:
+        return None
+    return {
+        "name": row["name"],
+        "brand": row["brand"],
+        "model": row["model"],
+        "target_price_range": {
+            "min": row["target_min"],
+            "max": row["target_max"],
+        },
+        "required_keywords": json.loads(row["required_keywords"]),
+        "blocked_keywords": json.loads(row["blocked_keywords"]),
+        "priority": row["priority"],
+        "sources": json.loads(row["sources"]),
+        "status": row["status"],
+    }
