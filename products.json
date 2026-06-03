@@ -1,0 +1,12 @@
+[
+  {
+    "name": "RTX 5070",
+    "url": "https://www.kabum.com.br/produto/exemplo",
+    "target_price": 3500
+  },
+  {
+    "name": "PS5 Slim",
+    "url": "https://produto.mercadolivre.com.br/exemplo",
+    "target_price": 2800
+  }
+]
