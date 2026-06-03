@@ -2,6 +2,8 @@
 
 Checklist para publicar e rodar o **price-agent** na sua conta GitHub.
 
+O projeto esta evoluindo para um agente pessoal de compras: cadastrar produtos desejados, pesquisar ofertas em fontes curadas, registrar resultados e alertar quando houver oportunidade real de compra.
+
 ## 1. Ferramentas
 
 | Ferramenta | Para quê |
@@ -10,6 +12,7 @@ Checklist para publicar e rodar o **price-agent** na sua conta GitHub.
 | [Git](https://git-scm.com/) | Versionamento |
 | [GitHub CLI](https://cli.github.com/) | Criar repo e push (`gh`) |
 | [Brave](https://brave.com/) | Browser dos scrapers (Playwright) |
+| [Notion](https://www.notion.so/) | Painel planejado para relatorios e oportunidades |
 
 Instalar GitHub CLI no Windows:
 
@@ -45,7 +48,7 @@ playwright install chromium
 copy .env.example .env
 ```
 
-Edite `products.json` com URLs reais.
+Edite `products.json` com os produtos atuais. No MVP futuro, esse arquivo deve evoluir para incluir nome do produto, marca, modelo, preco-alvo, palavras obrigatorias e palavras proibidas.
 
 ### Telegram (opcional)
 
@@ -57,6 +60,17 @@ Edite `products.json` com URLs reais.
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
 ```
+
+### Notion (planejado)
+
+A integracao com Notion ainda sera implementada. A ideia e usar o Notion como painel central com databases para:
+
+- produtos monitorados;
+- ofertas encontradas;
+- alertas enviados;
+- status de compra ou descarte.
+
+Quando a integracao for criada, o `.env` deve receber variaveis como token da integracao e IDs das databases.
 
 ## 5. Publicar no GitHub
 
