@@ -12,7 +12,6 @@ O projeto esta evoluindo para um agente pessoal de compras: cadastrar produtos d
 | [Git](https://git-scm.com/) | Versionamento |
 | [GitHub CLI](https://cli.github.com/) | Criar repo e push (`gh`) |
 | [Brave](https://brave.com/) | Browser dos scrapers (Playwright) |
-| [Notion](https://www.notion.so/) | Painel planejado para relatorios e oportunidades |
 
 Instalar GitHub CLI no Windows:
 
@@ -40,7 +39,7 @@ Escolha: GitHub.com → HTTPS → login no browser.
 ## 4. Projeto local
 
 ```powershell
-cd C:\Users\joaoe\price-agent
+cd price-agent
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -57,9 +56,9 @@ Para recriar ou atualizar os produtos cadastrados no SQLite depois de editar `pr
 python setup_db.py
 ```
 
-### Telegram (opcional, legado)
+### Telegram (opcional)
 
-A integracao com telefone deve acontecer via Notion futuramente. O Telegram fica como opcao tecnica legada do projeto atual.
+O alvo futuro e notificacao push por aplicativo proprio; ate la, o Telegram e o canal de alerta no celular. Sem token configurado, os alertas saem no console.
 
 1. Fale com [@BotFather](https://t.me/BotFather) → `/newbot` → copie o token.
 2. Envie uma mensagem ao seu bot; descubra o `chat_id` com [@userinfobot](https://t.me/userinfobot) ou a API `getUpdates`.
@@ -70,16 +69,16 @@ TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
 ```
 
-### Notion (planejado)
+### Painel (planejado)
 
-A integracao com Notion ainda sera implementada. A ideia e usar o Notion como painel central com databases para:
+O painel de acompanhamento sera um aplicativo proprio consumindo os dados do SQLite:
 
 - produtos monitorados;
 - ofertas encontradas;
 - alertas enviados;
 - status de compra ou descarte.
 
-Quando a integracao for criada, o `.env` deve receber variaveis como token da integracao e IDs das databases.
+Detalhes do modelo de dados em [PROJECT_SCOPE.md](PROJECT_SCOPE.md).
 
 ## 5. Publicar no GitHub
 
@@ -101,11 +100,11 @@ git push -u origin main
 
 Task Scheduler → diário → programa:
 
-`C:\Users\joaoe\price-agent\.venv\Scripts\python.exe`
+`<pasta do projeto>\.venv\Scripts\python.exe`
 
 Argumentos:
 
-`C:\Users\joaoe\price-agent\monitor.py`
+`<pasta do projeto>\monitor.py`
 
 ## Brave
 

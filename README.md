@@ -2,7 +2,7 @@
 
 Agente pessoal de compras para monitorar produtos desejados, pesquisar precos em fontes curadas e avisar quando aparecer uma oportunidade real de compra.
 
-O projeto esta evoluindo de um monitor de URLs especificas para um sistema mais amplo: voce cadastra um produto, define criterios de busca e preco-alvo, e o agente procura ofertas em fontes como marketplaces e comparadores de preco. Os resultados devem ser registrados em um local central, com Notion como destino preferencial para o painel de acompanhamento.
+O projeto esta evoluindo de um monitor de URLs especificas para um sistema mais amplo: voce cadastra um produto, define criterios de busca e preco-alvo, e o agente procura ofertas em fontes como marketplaces e comparadores de preco. Os resultados sao registrados em um local central; o destino final planejado e um aplicativo proprio com painel e notificacao push.
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ Transformar buscas manuais de preco em um fluxo recorrente:
 2. Buscar ofertas em fontes confiaveis.
 3. Comparar preco, loja, link e aderencia ao produto.
 4. Identificar oportunidades abaixo do preco-alvo ou com bom score.
-5. Registrar resultados no Notion.
+5. Registrar resultados em um painel central.
 6. Enviar alerta quando houver uma oportunidade relevante.
 
 Exemplo de entrada:
@@ -36,7 +36,7 @@ A base atual ja possui:
 - cadastro em `products.json` com faixa de preco;
 - consulta de historico por `query.py`.
 
-Essa base sera reorganizada para suportar descoberta de ofertas, comparacao entre fontes e relatorios no Notion.
+Essa base sera reorganizada para suportar descoberta de ofertas, comparacao entre fontes e um painel proprio de acompanhamento.
 
 ## Arquitetura planejada
 
@@ -48,8 +48,8 @@ Os "agentes" comecam como modulos simples e podem evoluir para orquestracao mais
 | Search Agent | Buscar candidatos em fontes curadas como Zoom, Buscape, Amazon, Mercado Livre e outras |
 | Price Agent | Extrair preco, loja, frete quando possivel, link e disponibilidade |
 | Opportunity Agent | Calcular score e decidir se existe oportunidade |
-| Report Agent | Registrar achados no Notion e gerar resumo |
-| Alert Agent | Enviar alerta por Telegram, e-mail ou outro canal |
+| Report Agent | Registrar achados no painel e gerar resumo |
+| Alert Agent | Enviar alerta por Telegram e, no futuro, push pelo app proprio |
 
 ## Fases
 
@@ -63,9 +63,9 @@ Os "agentes" comecam como modulos simples e podem evoluir para orquestracao mais
 - Salvar resultado em SQLite.
 - Alertar quando o preco estiver dentro da faixa configurada ou cair 15% em relacao ao menor preco anterior.
 
-### Fase 2: Notion como painel
+### Fase 2: Painel de acompanhamento
 
-- Criar integracao com Notion API.
+- Comecar com relatorio local; evoluir para aplicativo proprio.
 - Registrar produtos monitorados.
 - Registrar ofertas encontradas.
 - Marcar status: nova, boa, ignorada, comprada.
@@ -76,7 +76,7 @@ Os "agentes" comecam como modulos simples e podem evoluir para orquestracao mais
 - Rodar em agenda diaria ou por intervalo.
 - Evitar alertas duplicados.
 - Atualizar historico de preco.
-- Gerar resumo periodico no Notion.
+- Gerar resumo periodico no painel.
 
 ### Fase 4: Inteligencia de compra
 
@@ -110,12 +110,43 @@ price-agent/
 `-- requirements.txt
 ```
 
+## Arquitetura atual
+```mermaid
+flowchart LR
+    PJ[products.json] --> M[monitor.py]
+    M -->|get_price por URL| R{roteador scrapers}
+    R --> A[amazon.py]
+    R --> ML[mercado_livre.py]
+    R --> K[kabum.py]
+    A & ML & K -->|preço float| M
+
+    subgraph DB[prices.db - SQLite]
+        TP[products]
+        TO[offers]
+        TA[alerts]
+        TPR[prices]
+    end
+
+    M -->|upsert_product| TP
+    M -->|save_price| TPR
+
+    M -->|preço <= alvo ou queda >= 15%| N[notifier.py]
+    N --> T[Telegram / console]
+
+    R -.->|falha de scrape| E[log no console - NAO persiste]
+    E -.-> N
+
+    TPR --> Q[query.py]
+```
+
+Gaps e decisoes pendentes: ver [Estado atual](PROJECT_SCOPE.md#estado-atual) no PROJECT_SCOPE.
+
 ## Setup
 
 Guia completo: [SETUP.md](SETUP.md)
 
 ```powershell
-cd C:\Users\joaoe\price-agent
+cd price-agent
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -190,5 +221,5 @@ python query.py "Geladeira Frost Free" --days 30
 - Definir o formato novo de `products.json`.
 - Escolher as primeiras fontes de busca.
 - Criar modelo de dados para ofertas encontradas.
-- Preparar integracao com Notion.
+- Desenhar o painel de acompanhamento (app proprio).
 - Separar os modulos internos por responsabilidade.
