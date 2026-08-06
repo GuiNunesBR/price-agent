@@ -11,7 +11,6 @@ O projeto esta evoluindo para um agente pessoal de compras: cadastrar produtos d
 | [Python 3.11+](https://www.python.org/downloads/) | Rodar o agente |
 | [Git](https://git-scm.com/) | Versionamento |
 | [GitHub CLI](https://cli.github.com/) | Criar repo e push (`gh`) |
-| [Brave](https://brave.com/) | Browser dos scrapers (Playwright) |
 
 Instalar GitHub CLI no Windows:
 
@@ -106,11 +105,7 @@ Argumentos:
 
 `<pasta do projeto>\monitor.py`
 
-## Brave
+## Browser dos scrapers
 
-Os scrapers usam o Brave instalado em:
-
-`C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe`
-
-Outro caminho? Defina `BRAVE_EXECUTABLE_PATH` no `.env`.
+Os scrapers usam o Chromium empacotado do Playwright — basta o `playwright install chromium` do passo 4. Nenhum browser externo e necessario.
 

@@ -1,5 +1,5 @@
 from scrapers.base import BaseScraper, parse_brl
-from scrapers.page import close_session, with_brave_page
+from scrapers.page import close_session, with_page
 
 
 class KabumScraper(BaseScraper):
@@ -11,7 +11,7 @@ class KabumScraper(BaseScraper):
     ]
 
     def scrape(self, url: str) -> float | None:
-        playwright, browser, page = with_brave_page()
+        playwright, browser, page = with_page()
         try:
             page.goto(url, wait_until="domcontentloaded", timeout=60000)
             page.wait_for_timeout(3000)

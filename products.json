@@ -2,12 +2,12 @@
   {
     "name": "Geladeira Frost Free",
     "brand": "Brastemp",
-    "model": "bro85mb",
+    "model": "im8b",
     "target_price_range": {
-      "min": 3500,
-      "max": 4200
+      "min": 5000,
+      "max": 6000
     },
-    "required_keywords": ["geladeira", "brastemp", "frost"],
+    "required_keywords": ["geladeira", "brastemp", "frost", "inverter"],
     "blocked_keywords": ["usado", "recondicionado"],
     "priority": "alta",
     "sources": [
@@ -18,7 +18,8 @@
       "amazon",
       "casas_bahia",
       "magalu",
-      "kabum"
+      "kabum",
+      "shopee"
     ],
     "status": "active"
   }
