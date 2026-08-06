@@ -31,7 +31,7 @@ A base atual ja possui:
 
 - historico SQLite;
 - cadastro local de produtos no SQLite;
-- scrapers por loja com Playwright/Brave;
+- scrapers por loja com Playwright (Chromium);
 - alertas via Telegram ou console;
 - cadastro em `products.json` com faixa de preco;
 - consulta de historico por `query.py`.
@@ -155,7 +155,7 @@ copy .env.example .env
 python setup_db.py
 ```
 
-Scrapers rodam no Brave via Playwright. Se o Brave estiver em outro caminho, configure `BRAVE_EXECUTABLE_PATH` no `.env`.
+Scrapers rodam no Chromium empacotado do Playwright (instalado via `playwright install chromium`).
 
 ## Produto monitorado
 
