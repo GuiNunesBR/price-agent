@@ -36,7 +36,8 @@ Gaps mapeados na revisao de arquitetura:
 - **Erro de scrape nao persiste** — vai so pro log no console; a tabela `alerts` existe mas o fluxo automatico nao grava nela. Nao da pra consultar depois "quais scrapers falharam essa semana".
 - **Tabela `prices` chaveada so pelo nome do produto** — mistura lojas no mesmo historico; a regra dos 15% pode comparar preco da Amazon com preco da Kabum. Decisao pendente: adicionar coluna `store` em `prices` OU derivar o historico da tabela `offers` (que ja tem loja/fonte).
 - **Score so existe no caminho manual** — `opportunity.py` e importado apenas por `record_offer.py`; o monitor automatico nao pontua oferta nenhuma. `offers` e `alerts` so sao alimentadas manualmente.
-- **Massa de teste pendente** — sem URLs reais cadastradas em `products.json` e sem token do Telegram configurado; a primeira execucao ponta a ponta ainda nao foi validada.
+- **Mercado Livre bloqueia browser automatizado** — redireciona para muro de login (account-verification) antes da pagina do produto; o scraper existe mas nao passa. Contornar exige tecnicas anti-deteccao (fora do escopo por ora).
+- **Massa de teste pendente** — sem token do Telegram configurado; alertas saem no console.
 
 ## MVP
 
@@ -213,5 +214,6 @@ Evolucao da infraestrutura do projeto, em fases curtas:
 
 ## Ideias futuras
 
+- Mercado Livre via API oficial (OAuth) em vez de scraping — a API anonima retorna 401/403 (sondado em 06/08), mas com app registrado em developers.mercadolibre.com da para consultar preco por item id, sem browser e sem muro de login.
 - Persistir falhas de scrape na tabela `alerts` (ou tabela propria) para acompanhar a saude dos scrapers ao longo do tempo.
 - Ligar o `opportunity.py` no fluxo automatico do monitor, gravando score em `offers`.
