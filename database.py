@@ -1,25 +1,25 @@
 import json
-import sqlite3
+import os
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Any
 
-DB = Path(__file__).parent / "prices.db"
+import psycopg
+from dotenv import load_dotenv
+from psycopg.rows import dict_row
+
+load_dotenv()
 
 
-def connect() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB)
-    conn.row_factory = sqlite3.Row
-    return conn
+def connect() -> psycopg.Connection:
+    return psycopg.connect(os.environ["DATABASE_URL"], row_factory=dict_row)
 
 
 def create_db() -> None:
     conn = connect()
-    conn.execute("PRAGMA foreign_keys = ON")
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL UNIQUE,
             brand TEXT,
             model TEXT,
@@ -38,7 +38,7 @@ def create_db() -> None:
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS offers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             product_id INTEGER NOT NULL,
             title TEXT NOT NULL,
             price REAL NOT NULL,
@@ -54,7 +54,7 @@ def create_db() -> None:
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS alerts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             product_id INTEGER NOT NULL,
             offer_id INTEGER,
             reason TEXT NOT NULL,
@@ -68,7 +68,7 @@ def create_db() -> None:
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS prices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             product TEXT NOT NULL,
             price REAL NOT NULL,
             date TEXT NOT NULL
@@ -103,8 +103,8 @@ def upsert_product(item: dict) -> int:
             name, brand, model, target_min, target_max, required_keywords,
             blocked_keywords, priority, sources, status, created_at, updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(name) DO UPDATE SET
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (name) DO UPDATE SET
             brand = excluded.brand,
             model = excluded.model,
             target_min = excluded.target_min,
@@ -131,7 +131,7 @@ def upsert_product(item: dict) -> int:
             now,
         ),
     )
-    row = conn.execute("SELECT id FROM products WHERE name = ?", (item["name"],)).fetchone()
+    row = conn.execute("SELECT id FROM products WHERE name = %s", (item["name"],)).fetchone()
     conn.commit()
     conn.close()
     return int(row["id"])
@@ -140,7 +140,7 @@ def upsert_product(item: dict) -> int:
 def save_price(product: str, value: float) -> None:
     conn = connect()
     conn.execute(
-        "INSERT INTO prices (product, price, date) VALUES (?, ?, ?)",
+        "INSERT INTO prices (product, price, date) VALUES (%s, %s, %s)",
         (product, value, datetime.now().isoformat()),
     )
     conn.commit()
@@ -159,17 +159,18 @@ def save_offer(
 ) -> int:
     conn = connect()
     row = conn.execute(
-        "SELECT id FROM products WHERE name = ?",
+        "SELECT id FROM products WHERE name = %s",
         (product_name,),
     ).fetchone()
     if row is None:
         conn.close()
-        raise ValueError(f"Produto nao cadastrado no SQLite: {product_name}")
+        raise ValueError(f"Produto nao cadastrado no banco: {product_name}")
 
     cursor = conn.execute(
         """
         INSERT INTO offers (product_id, title, price, store, source, url, score, captured_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING id
         """,
         (
             row["id"],
@@ -182,8 +183,8 @@ def save_offer(
             datetime.now().isoformat(),
         ),
     )
+    offer_id = int(cursor.fetchone()["id"])
     conn.commit()
-    offer_id = int(cursor.lastrowid)
     conn.close()
     save_price(product_name, price)
     return offer_id
@@ -192,22 +193,23 @@ def save_offer(
 def save_alert(product_name: str, reason: str, message: str, offer_id: int | None = None) -> int:
     conn = connect()
     row = conn.execute(
-        "SELECT id FROM products WHERE name = ?",
+        "SELECT id FROM products WHERE name = %s",
         (product_name,),
     ).fetchone()
     if row is None:
         conn.close()
-        raise ValueError(f"Produto nao cadastrado no SQLite: {product_name}")
+        raise ValueError(f"Produto nao cadastrado no banco: {product_name}")
 
     cursor = conn.execute(
         """
         INSERT INTO alerts (product_id, offer_id, reason, message, created_at)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
+        RETURNING id
         """,
         (row["id"], offer_id, reason, message, datetime.now().isoformat()),
     )
+    alert_id = int(cursor.fetchone()["id"])
     conn.commit()
-    alert_id = int(cursor.lastrowid)
     conn.close()
     return alert_id
 
@@ -217,7 +219,7 @@ def get_last_price(product: str) -> float | None:
     row = conn.execute(
         """
         SELECT price FROM prices
-        WHERE product = ?
+        WHERE product = %s
         ORDER BY date DESC
         LIMIT 1
         """,
@@ -233,7 +235,7 @@ def get_min_price_days(product: str, days: int = 30) -> float | None:
     row = conn.execute(
         """
         SELECT MIN(price) AS value FROM prices
-        WHERE product = ? AND date >= ?
+        WHERE product = %s AND date >= %s
         """,
         (product, since),
     ).fetchone()
@@ -252,7 +254,7 @@ def get_price_stats(product: str, days: int = 30) -> dict[str, float | int | Non
             AVG(price) AS average,
             MAX(price) AS maximum
         FROM prices
-        WHERE product = ? AND date >= ?
+        WHERE product = %s AND date >= %s
         """,
         (product, since),
     ).fetchone()
@@ -273,7 +275,7 @@ def get_product(name: str) -> dict | None:
             name, brand, model, target_min, target_max, required_keywords,
             blocked_keywords, priority, sources, status
         FROM products
-        WHERE name = ?
+        WHERE name = %s
         """,
         (name,),
     ).fetchone()
