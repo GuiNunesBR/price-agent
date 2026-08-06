@@ -22,5 +22,17 @@
       "shopee"
     ],
     "status": "active"
-  }
+  },
+
+  {
+  "name": "Geladeira Electrolux Frost Free Inverter 596L AutoSense 3 Portas Cor Black Inox Look (IM8B)",
+  "target_price_range": {
+    "min": 4000,
+    "max": 5800
+  },
+  "url": "https://www.amazon.com.br/Geladeira-Electrolux-Multidoor-Efficient-Autosense/dp/B0B3PGGKVT",
+  "status": "active"
+}
 ]
+
+
