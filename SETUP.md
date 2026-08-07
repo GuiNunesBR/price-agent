@@ -47,7 +47,7 @@ copy .env.example .env
 python setup_db.py
 ```
 
-Edite `products.json` com os produtos atuais. O formato atual inclui nome do produto, marca, modelo, faixa de preco, palavras obrigatorias, palavras proibidas e fontes desejadas.
+No `.env`, configure `DATABASE_URL` com a connection string do Postgres (Neon). Edite `products.json` com os produtos atuais. O formato atual inclui nome do produto, marca, modelo, faixa de preco, palavras obrigatorias, palavras proibidas e fontes desejadas.
 
 Para recriar ou atualizar os produtos cadastrados no SQLite depois de editar `products.json`, rode:
 
@@ -70,7 +70,7 @@ TELEGRAM_CHAT_ID=...
 
 ### Painel (planejado)
 
-O painel de acompanhamento sera um aplicativo proprio consumindo os dados do SQLite:
+O painel de acompanhamento sera um aplicativo proprio consumindo os dados do Postgres:
 
 - produtos monitorados;
 - ofertas encontradas;

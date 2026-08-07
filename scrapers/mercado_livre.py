@@ -10,7 +10,7 @@ class MercadoLivreScraper(BaseScraper):
     ]
 
     def scrape(self, url: str) -> float | None:
-        playwright, browser, page = with_page(headless=False)
+        playwright, browser, page = with_page()
         try:
             page.goto(url, wait_until="domcontentloaded", timeout=60000)
             page.wait_for_timeout(2000)

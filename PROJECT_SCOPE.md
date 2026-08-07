@@ -4,7 +4,7 @@
 
 O `price-agent` sera um agente pessoal de compras. Em vez de depender apenas de URLs fixas, o sistema deve receber uma intencao de compra, procurar ofertas na internet em fontes confiaveis, comparar os resultados e registrar oportunidades em um painel central.
 
-O destino final planejado e um aplicativo proprio: painel de produtos desejados, ofertas encontradas e alertas, com notificacao push no celular. Ate o app existir, o acompanhamento fica no SQLite local e os alertas saem por Telegram ou console.
+O destino final planejado e um aplicativo proprio: painel de produtos desejados, ofertas encontradas e alertas, com notificacao push no celular. Ate o app existir, o acompanhamento fica no Postgres gerenciado (Neon) e os alertas saem por Telegram ou console.
 
 ## Problema
 
@@ -25,7 +25,8 @@ Automatizar a rotina de acompanhamento:
 
 Diagrama completo no [README](README.md#arquitetura-atual). O que ja funciona:
 
-- `monitor.py` le `products.json`, roteia por host da URL (Amazon, Mercado Livre, Kabum) e salva historico no SQLite;
+- `monitor.py` le `products.json`, roteia por host da URL (Amazon, Mercado Livre, Kabum) e salva historico no Postgres gerenciado (Neon, via `DATABASE_URL`);
+- execucao diaria automatica no GitHub Actions (cron 9h BRT + gatilho manual), com a connection string em secret;
 - falha em um produto nao derruba os outros (try/except por item no loop);
 - alerta por preco <= alvo ou queda >= 15% vs ultimo preco;
 - notifier com fallback: sem token do Telegram, cai pro console;
@@ -37,6 +38,7 @@ Gaps mapeados na revisao de arquitetura:
 - **Tabela `prices` chaveada so pelo nome do produto** — mistura lojas no mesmo historico; a regra dos 15% pode comparar preco da Amazon com preco da Kabum. Decisao pendente: adicionar coluna `store` em `prices` OU derivar o historico da tabela `offers` (que ja tem loja/fonte).
 - **Score so existe no caminho manual** — `opportunity.py` e importado apenas por `record_offer.py`; o monitor automatico nao pontua oferta nenhuma. `offers` e `alerts` so sao alimentadas manualmente.
 - **Mercado Livre bloqueia browser automatizado** — redireciona para muro de login (account-verification) antes da pagina do produto; o scraper existe mas nao passa. Contornar exige tecnicas anti-deteccao (fora do escopo por ora).
+- **Amazon bloqueia IP de datacenter** — o scrape funciona da maquina local mas falha no runner do GitHub Actions (reputacao de IP de nuvem). Fonte via API/JSON (ex.: lojas VTEX) e o caminho para o cron funcionar de ponta a ponta.
 - **Massa de teste pendente** — sem token do Telegram configurado; alertas saem no console.
 
 ## MVP
@@ -207,10 +209,10 @@ Melhoria de inteligencia: matching de produto, analise de variacoes, reputacao d
 Evolucao da infraestrutura do projeto, em fases curtas:
 
 - **Fase A — arquitetura documentada** FEITO - 06/08 diagrama Mermaid no README, gaps de persistencia mapeados.
-- **Fase B — execucao agendada no GitHub Actions** (cron), substituindo a dependencia de maquina ligada.
+- **Fase B — execucao agendada no GitHub Actions** FEITO - 06/08 cron diario 9h BRT + workflow_dispatch, DATABASE_URL em secret.
 - **Fase C — Dockerfile + docker-compose** para rodar em qualquer ambiente.
 - **Fase D — analise do historico de precos com pandas**: tendencia, queda atipica, melhor momento de compra.
-- **Fase E — SQLite -> Postgres** com consultas analiticas.
+- **Fase E — SQLite -> Postgres** MIGRACAO FEITA - 06/08 (psycopg + Neon); restam as consultas analiticas.
 
 ## Ideias futuras
 

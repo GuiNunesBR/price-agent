@@ -29,11 +29,11 @@ Prioridade: alta
 
 A base atual ja possui:
 
-- historico SQLite;
-- cadastro local de produtos no SQLite;
+- historico em Postgres gerenciado (Neon);
+- cadastro de produtos no banco a partir de `products.json`;
 - scrapers por loja com Playwright (Chromium);
 - alertas via Telegram ou console;
-- cadastro em `products.json` com faixa de preco;
+- execucao diaria no GitHub Actions (cron 9h BRT);
 - consulta de historico por `query.py`.
 
 Essa base sera reorganizada para suportar descoberta de ofertas, comparacao entre fontes e um painel proprio de acompanhamento.
@@ -90,11 +90,11 @@ Os "agentes" comecam como modulos simples e podem evoluir para orquestracao mais
 
 ```text
 price-agent/
+|-- .github/workflows/monitor.yml  # cron diario no GitHub Actions
 |-- products.json      # produtos monitorados atualmente
-|-- prices.db          # historico gerado na primeira execucao
 |-- monitor.py         # agente principal atual
 |-- notifier.py        # Telegram / console
-|-- database.py        # SQLite
+|-- database.py        # Postgres (Neon) via psycopg
 |-- query.py           # consulta menor preco
 |-- setup_db.py        # inicializa SQLite e cadastra produtos
 |-- inspect_db.py      # mostra produtos, ofertas e alertas
