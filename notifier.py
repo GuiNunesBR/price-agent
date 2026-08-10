@@ -21,6 +21,8 @@ def send_message(text: str) -> bool:
             json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
             timeout=30,
         )
+        if not response.ok:
+            print(f"[notifier] Telegram recusou ({response.status_code}): {response.text[:200]}")
         return response.ok
     print(text)
     return True
