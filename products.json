@@ -41,7 +41,18 @@
   },
   "url": "https://www.amazon.com.br/Geladeira-Electrolux-Multidoor-Efficient-Autosense/dp/B0B3PJXDMN",
   "status": "active"
+},
+{
+  "name": "Geladeira Electrolux IM8B - Loja Electrolux",
+  "target_price_range": {
+    "min": 4000,
+    "max": 5800
+  },
+  "url": "https://loja.electrolux.com.br/geladeira-electrolux-frost-free-inverter-596l-autosense-3-portas-cor-black-inox-look--im8b-/p",
+  "status": "active"
 }
+
+
 ]
 
 

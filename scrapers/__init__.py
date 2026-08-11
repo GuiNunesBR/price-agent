@@ -4,6 +4,8 @@ from scrapers.amazon import AmazonScraper
 from scrapers.base import BaseScraper
 from scrapers.kabum import KabumScraper
 from scrapers.mercado_livre import MercadoLivreScraper
+from scrapers.electrolux import ElectroluxScraper
+
 
 
 def get_scraper(url: str) -> BaseScraper:
@@ -14,6 +16,9 @@ def get_scraper(url: str) -> BaseScraper:
         return MercadoLivreScraper()
     if "kabum" in host:
         return KabumScraper()
+    if "electrolux" in host:
+        return ElectroluxScraper()
+    
     raise ValueError(f"Nenhum scraper registrado para: {host}")
 
 
