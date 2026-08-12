@@ -1,5 +1,6 @@
 .env
 prices.db
+ultima_busca.json
 __pycache__/
 *.pyc
 .venv/
