@@ -27,16 +27,26 @@ Prioridade: alta
 
 ## Estado atual
 
-A base atual ja possui:
+Sistema autonomo rodando desde 06/08/2026:
 
-- historico em Postgres gerenciado (Neon);
-- cadastro de produtos no banco a partir de `products.json`;
-- scrapers por loja com Playwright (Chromium);
-- alertas via Telegram ou console;
-- execucao diaria no GitHub Actions (cron 9h BRT);
-- consulta de historico por `query.py`.
+- historico em Postgres gerenciado (Neon), alimentado todo dia pelo cron do GitHub Actions (9h BRT);
+- scrapers por loja: HTML via Playwright (Amazon, Mercado Livre, Kabum) e API VTEX via requests
+  (Electrolux — sem browser, imune a anti-bot);
+- busca multi-loja por `busca.py`: 8 lojas VTEX, ordena por preco, filtro `--bloquear` por pesquisa;
+- alertas por Telegram (preco <= alvo ou queda >= 15%) com fallback para console;
+- analise do historico em `analise_precos.ipynb` (pandas: menor preco do dia por produto);
+- consulta rapida por `query.py`.
 
-Essa base sera reorganizada para suportar descoberta de ofertas, comparacao entre fontes e um painel proprio de acompanhamento.
+Proxima evolucao (ver [PROJECT_SCOPE.md](PROJECT_SCOPE.md)): painel proprio de acompanhamento e o
+pipeline busca -> cadastro -> monitoramento (Search Agent v2).
+
+## Resultados
+
+- Cron diario capturando precos sem intervencao humana desde a Fase B (com a maquina do dev desligada).
+- Alerta de preco-alvo validado ponta a ponta no Telegram.
+- Aprendizados documentados no PROJECT_SCOPE: Mercado Livre bloqueia browser automatizado; Amazon
+  bloqueia IP de datacenter de forma intermitente; API oficial do ML exige OAuth. A resposta de
+  arquitetura foi a fonte via API VTEX — estruturada, rapida (~1s vs ~20s de browser) e estavel.
 
 ## Arquitetura planejada
 
@@ -92,20 +102,23 @@ Os "agentes" comecam como modulos simples e podem evoluir para orquestracao mais
 price-agent/
 |-- .github/workflows/monitor.yml  # cron diario no GitHub Actions
 |-- products.json      # produtos monitorados atualmente
-|-- monitor.py         # agente principal atual
-|-- notifier.py        # Telegram / console
+|-- monitor.py         # agente principal: captura, grava e decide alertas
+|-- busca.py           # busca multi-loja via API VTEX (POC do Search Agent)
+|-- notifier.py        # Telegram / console (loga recusa da API)
 |-- database.py        # Postgres (Neon) via psycopg
+|-- analise_precos.ipynb  # analise do historico com pandas
 |-- query.py           # consulta menor preco
-|-- setup_db.py        # inicializa SQLite e cadastra produtos
+|-- setup_db.py        # inicializa o banco e cadastra produtos
 |-- inspect_db.py      # mostra produtos, ofertas e alertas
 |-- record_offer.py    # registra oferta manual para teste/MVP
 |-- scrapers/
-|   |-- amazon.py
+|   |-- amazon.py      # HTML via Playwright
 |   |-- mercado_livre.py
 |   |-- kabum.py
+|   |-- electrolux.py  # API VTEX via requests (sem browser)
 |   |-- browser.py
 |   `-- page.py
-|-- PROJECT_SCOPE.md   # escopo e roadmap do novo produto
+|-- PROJECT_SCOPE.md   # escopo e roadmap do produto
 |-- SETUP.md
 `-- requirements.txt
 ```
@@ -118,7 +131,8 @@ flowchart LR
     R --> A[amazon.py]
     R --> ML[mercado_livre.py]
     R --> K[kabum.py]
-    A & ML & K -->|preço float| M
+    R --> E[electrolux.py - API VTEX]
+    A & ML & K & E -->|preço float| M
 
     subgraph DB[prices.db - SQLite]
         TP[products]
@@ -214,6 +228,12 @@ Consulta historico:
 
 ```powershell
 python query.py "Geladeira Frost Free" --days 30
+```
+
+Busca multi-loja (candidatos ordenados por preco, salvos em `ultima_busca.json`):
+
+```powershell
+python busca.py "tablet" --limite 5 --bloquear "reembalado,infantil"
 ```
 
 ## Proximos passos imediatos
