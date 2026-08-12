@@ -148,7 +148,14 @@ Normaliza os dados do produto e transforma a intencao de compra em criterios obj
 
 ### Search Agent
 
-Executa buscas nas fontes configuradas e retorna candidatos.
+Executa buscas nas fontes configuradas e retorna candidatos (JSON salvo para o usuario escolher
+o que monitorar).
+
+Refinamento (11/08): a primeira fonte de busca deve ser a propria API VTEX das lojas cadastradas —
+o endpoint `?ft=<termo>` do catalog_system ja retorna candidatos estruturados (mesmo request do
+scraper Electrolux). Agregadores (Buscape/Zoom) ficam de fora: sem API publica e anti-bot pesado —
+seria trocar a briga com a Amazon por uma pior. Depende de existir um front (painel do app) para
+fazer sentido; nao antecipar para antes dele.
 
 ### Price Agent
 
