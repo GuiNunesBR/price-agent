@@ -18,6 +18,11 @@ LOJAS_VTEX = {
     "electrolux": "https://loja.electrolux.com.br",
     "consul": "https://loja.consul.com.br",
 }
+# Peças e acessórios aparecem na busca por nome de produto (ex.: "tampa de geladeira" por R$ 38)
+BLOCKED_KEYWORDS = [
+    "tampa", "prateleira", "peça", "filtro", "suporte", "gaveta", "borracha",
+    "puxador", "motoventilador", "instalação", "instalacao", "sensor", "rede",
+]
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 ARQUIVO_RESULTADO = Path(__file__).parent / "ultima_busca.json"
 
@@ -36,6 +41,9 @@ def buscar_na_loja(loja: str, base: str, termo: str, limite: int) -> list[dict]:
             continue
         preco = offer.get("Price")
         if not offer.get("IsAvailable") or not preco or preco <= 0:
+            continue
+        nome = (produto.get("productName") or "").lower()
+        if any(palavra in nome for palavra in BLOCKED_KEYWORDS):
             continue
         candidatos.append(
             {
