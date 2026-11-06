@@ -27,6 +27,23 @@ def load_products() -> list[dict]:
         return json.load(f)
 
 
+def decide_alerts(
+    price: float, target: float, previous: float | None
+) -> tuple[bool, float | None]:
+    """Decide quais alertas disparar para um preco coletado.
+
+    Retorna (meta_atingida, queda_pct). queda_pct e None quando nao ha preco
+    anterior ou a queda nao chega a DROP_THRESHOLD_PCT.
+    """
+    hit_target = price <= target
+    pct_drop = None
+    if previous and previous > price:
+        pct = ((previous - price) / previous) * 100
+        if pct >= DROP_THRESHOLD_PCT:
+            pct_drop = pct
+    return hit_target, pct_drop
+
+
 def check_product(item: dict) -> None:
     name = item["name"]
     upsert_product(item)
@@ -54,13 +71,11 @@ def check_product(item: dict) -> None:
     previous = get_last_price(name)
     save_price(name, price)
 
-    if price <= target:
+    hit_target, pct_drop = decide_alerts(price, target, previous)
+    if hit_target:
         send_target_alert(name, price, target, url)
-
-    if previous and previous > price:
-        pct = ((previous - price) / previous) * 100
-        if pct >= DROP_THRESHOLD_PCT:
-            send_drop_alert(name, price, previous, pct, url)
+    if pct_drop is not None:
+        send_drop_alert(name, price, previous, pct_drop, url)
 
 
 def run() -> None:

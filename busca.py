@@ -32,9 +32,13 @@ def buscar_na_loja(loja: str, base: str, termo: str, limite: int) -> list[dict]:
     response = requests.get(url, headers=HEADERS, timeout=30)
     if not response.ok:
         return []
+    return extrair_candidatos(loja, base, response.json())
 
+
+def extrair_candidatos(loja: str, base: str, produtos: list) -> list[dict]:
+    """Filtra a resposta VTEX: so itens disponiveis, com preco e sem palavra bloqueada."""
     candidatos = []
-    for produto in response.json():
+    for produto in produtos:
         try:
             offer = produto["items"][0]["sellers"][0]["commertialOffer"]
         except (KeyError, IndexError):
