@@ -243,3 +243,7 @@ python busca.py "tablet" --limite 5 --bloquear "reembalado,infantil"
 - Criar modelo de dados para ofertas encontradas.
 - Desenhar o painel de acompanhamento (app proprio).
 - Separar os modulos internos por responsabilidade.
+
+## Licença
+
+[MIT](LICENSE) © 2026 Guilherme Nunes
