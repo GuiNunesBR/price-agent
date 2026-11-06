@@ -7,3 +7,4 @@ __pycache__/
 venv/
 playwright/.cache/
 work/
+.pytest_cache/
