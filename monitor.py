@@ -54,7 +54,7 @@ def check_product(item: dict) -> None:
 
     if not url:
         log.info(
-            "%s cadastrado no SQLite. Busca por fontes ainda sera implementada.",
+            "%s cadastrado no banco. Busca por fontes ainda sera implementada.",
             name,
         )
         return

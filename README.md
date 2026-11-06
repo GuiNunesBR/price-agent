@@ -100,7 +100,9 @@ Os "agentes" comecam como modulos simples e podem evoluir para orquestracao mais
 
 ```text
 price-agent/
-|-- .github/workflows/monitor.yml  # cron diario no GitHub Actions
+|-- .github/workflows/
+|   |-- monitor.yml    # cron diario no GitHub Actions
+|   `-- tests.yml      # pytest em todo push e PR
 |-- products.json      # produtos monitorados atualmente
 |-- monitor.py         # agente principal: captura, grava e decide alertas
 |-- busca.py           # busca multi-loja via API VTEX (POC do Search Agent)
@@ -118,9 +120,12 @@ price-agent/
 |   |-- electrolux.py  # API VTEX via requests (sem browser)
 |   |-- browser.py
 |   `-- page.py
+|-- tests/             # testes pytest (sem rede, banco ou browser)
 |-- PROJECT_SCOPE.md   # escopo e roadmap do produto
 |-- SETUP.md
-`-- requirements.txt
+|-- requirements.txt           # dependencias do monitor
+|-- requirements-dev.txt       # + pytest
+`-- requirements-notebook.txt  # + pandas/matplotlib para o notebook
 ```
 
 ## Arquitetura atual
@@ -134,7 +139,7 @@ flowchart LR
     R --> E[electrolux.py - API VTEX]
     A & ML & K & E -->|preço float| M
 
-    subgraph DB[prices.db - SQLite]
+    subgraph DB[Postgres - Neon]
         TP[products]
         TO[offers]
         TA[alerts]
@@ -147,8 +152,8 @@ flowchart LR
     M -->|preço <= alvo ou queda >= 15%| N[notifier.py]
     N --> T[Telegram / console]
 
-    R -.->|falha de scrape| E[log no console - NAO persiste]
-    E -.-> N
+    R -.->|falha de scrape| LOG[log no console - NAO persiste]
+    LOG -.-> N
 
     TPR --> Q[query.py]
 ```
@@ -170,6 +175,19 @@ python setup_db.py
 ```
 
 Scrapers rodam no Chromium empacotado do Playwright (instalado via `playwright install chromium`).
+
+Para o notebook de analise: `pip install -r requirements-notebook.txt`.
+
+## Testes
+
+Os testes cobrem as regras puras: decisao de alerta (meta e queda de 15%), palavras obrigatorias e proibidas, parsing de precos em reais e da API VTEX, e o fallback do Telegram para o console. Nao acessam rede, banco nem browser.
+
+```powershell
+pip install -r requirements-dev.txt
+pytest -q
+```
+
+O workflow `testes` roda a mesma suite no GitHub Actions a cada push e pull request.
 
 ## Produto monitorado
 
@@ -194,7 +212,7 @@ Formato atual do `products.json`:
 
 ## Uso atual
 
-Inicializar ou atualizar produtos no SQLite:
+Inicializar ou atualizar produtos no banco:
 
 ```powershell
 python setup_db.py

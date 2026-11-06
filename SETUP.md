@@ -49,7 +49,7 @@ python setup_db.py
 
 No `.env`, configure `DATABASE_URL` com a connection string do Postgres (Neon). Edite `products.json` com os produtos atuais. O formato atual inclui nome do produto, marca, modelo, faixa de preco, palavras obrigatorias, palavras proibidas e fontes desejadas.
 
-Para recriar ou atualizar os produtos cadastrados no SQLite depois de editar `products.json`, rode:
+Para recriar ou atualizar os produtos cadastrados no banco depois de editar `products.json`, rode:
 
 ```powershell
 python setup_db.py
@@ -95,7 +95,18 @@ git remote add origin https://github.com/GuiNunesBR/price-agent.git
 git push -u origin main
 ```
 
-## 6. Agendamento diário (Windows)
+## 6. Monitor diario no GitHub Actions
+
+O workflow `monitor-precos` (`.github/workflows/monitor.yml`) roda todo dia as 9h BRT, sem precisar da sua maquina ligada.
+
+1. Em **Settings → Secrets and variables → Actions**, cadastre:
+   - `DATABASE_URL`: connection string do Neon;
+   - `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID`: opcionais; sem eles, os alertas saem so no log do job.
+2. Em **Actions → monitor-precos → Run workflow**, rode uma vez para validar.
+
+**O cron para sozinho depois de 60 dias sem commits.** O GitHub desativa workflows agendados de repositorios publicos inativos. Para reativar: **Actions → monitor-precos → Enable workflow**. Qualquer commit tambem reinicia a contagem.
+
+## 7. Agendamento diário local (Windows, alternativa)
 
 Task Scheduler → diário → programa:
 

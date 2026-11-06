@@ -97,7 +97,7 @@ Observacao: comparadores como Zoom e Buscape sao bons porque ja fazem parte da c
 
 ## Painel (aplicativo proprio)
 
-O painel operacional sera um aplicativo proprio, consumindo os mesmos dados do SQLite (e Postgres no futuro). O modelo de dados abaixo vale independente da interface:
+O painel operacional sera um aplicativo proprio, consumindo os mesmos dados do Postgres (Neon). O modelo de dados abaixo vale independente da interface:
 
 ### Database: Produtos Monitorados
 
