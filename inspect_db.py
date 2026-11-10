@@ -1,9 +1,13 @@
-import sqlite3
+"""Mostra o conteudo do banco: produtos, ofertas, alertas e falhas de scrape.
 
-from database import DB, create_db
+Uso:
+    python inspect_db.py
+"""
+
+from database import connect, create_db
 
 
-def print_rows(title: str, rows: list[sqlite3.Row]) -> None:
+def print_rows(title: str, rows: list[dict]) -> None:
     print(f"\n{title}:")
     if not rows:
         print("- nenhum registro")
@@ -14,15 +18,18 @@ def print_rows(title: str, rows: list[sqlite3.Row]) -> None:
 
 def main() -> None:
     create_db()
-    conn = sqlite3.connect(DB)
-    conn.row_factory = sqlite3.Row
+    conn = connect()
 
     tables = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
+        """
+        SELECT table_name FROM information_schema.tables
+        WHERE table_schema = 'public'
+        ORDER BY table_name
+        """
     ).fetchall()
     print("Tabelas:")
     for table in tables:
-        print(f"- {table['name']}")
+        print(f"- {table['table_name']}")
 
     products = conn.execute(
         """
@@ -52,6 +59,16 @@ def main() -> None:
         """
     ).fetchall()
     print_rows("Ultimos alertas", alerts)
+
+    failures = conn.execute(
+        """
+        SELECT product, store, reason, failed_at
+        FROM scrape_failures
+        ORDER BY failed_at DESC
+        LIMIT 10
+        """
+    ).fetchall()
+    print_rows("Ultimas falhas de scrape", failures)
     conn.close()
 
 
