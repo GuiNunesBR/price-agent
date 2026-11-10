@@ -81,6 +81,22 @@ def create_db() -> None:
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_offers_product_date ON offers(product_id, captured_at)"
     )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS scrape_failures (
+            id SERIAL PRIMARY KEY,
+            product TEXT NOT NULL,
+            url TEXT NOT NULL,
+            store TEXT,
+            reason TEXT NOT NULL,
+            failed_at TEXT NOT NULL
+        )
+        """
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_scrape_failures_product_date "
+        "ON scrape_failures(product, failed_at)"
+    )
     conn.commit()
     conn.close()
 
@@ -212,6 +228,34 @@ def save_alert(product_name: str, reason: str, message: str, offer_id: int | Non
     conn.commit()
     conn.close()
     return alert_id
+
+
+def record_scrape_failure(product: str, url: str, store: str | None, reason: str) -> None:
+    conn = connect()
+    conn.execute(
+        """
+        INSERT INTO scrape_failures (product, url, store, reason, failed_at)
+        VALUES (%s, %s, %s, %s, %s)
+        """,
+        (product, url, store, reason, datetime.now().isoformat()),
+    )
+    conn.commit()
+    conn.close()
+
+
+def count_consecutive_failures(product: str) -> int:
+    """Falhas registradas desde o ultimo preco capturado com sucesso."""
+    conn = connect()
+    row = conn.execute(
+        """
+        SELECT COUNT(*) AS n FROM scrape_failures
+        WHERE product = %s
+          AND failed_at > COALESCE((SELECT MAX(date) FROM prices WHERE product = %s), '')
+        """,
+        (product, product),
+    ).fetchone()
+    conn.close()
+    return int(row["n"]) if row else 0
 
 
 def get_last_price(product: str) -> float | None:

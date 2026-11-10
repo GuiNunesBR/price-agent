@@ -1,3 +1,4 @@
+import html
 import os
 
 import requests
@@ -57,11 +58,23 @@ def send_drop_alert(
     send_message(text)
 
 
-def send_scrape_error(product: str, url: str) -> None:
+def send_scrape_error(product: str, url: str, consecutive: int, reason: str) -> None:
     text = (
         f"⚠️ <b>Falha ao buscar preço</b>\n\n"
         f"<b>Produto:</b> {product}\n"
         f"<b>Link:</b> {url}\n"
+        f"<b>Falhas seguidas:</b> {consecutive}\n"
+        f"<b>Último erro:</b> {html.escape(reason)}\n"
         f"Verifique URL e seletores do scraper."
+    )
+    send_message(text)
+
+
+def send_scrape_recovered(product: str, url: str, failures: int) -> None:
+    text = (
+        f"✅ <b>Scraper voltou a funcionar</b>\n\n"
+        f"<b>Produto:</b> {product}\n"
+        f"<b>Link:</b> {url}\n"
+        f"Preço capturado de novo depois de {failures} falhas seguidas."
     )
     send_message(text)

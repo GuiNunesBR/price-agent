@@ -34,6 +34,7 @@ Sistema autonomo rodando desde 06/08/2026:
   (Electrolux — sem browser, imune a anti-bot);
 - busca multi-loja por `busca.py`: 8 lojas VTEX, ordena por preco, filtro `--bloquear` por pesquisa;
 - alertas por Telegram (preco <= alvo ou queda >= 15%) com fallback para console;
+- falhas de scrape gravadas no banco (`scrape_failures`); alerta no Telegram so quando o mesmo produto falha 3 execucoes seguidas, ou seja 3 dias no cron diario (configuravel em `SCRAPE_FAILURE_ALERT_AFTER`), e aviso quando o scraper volta a funcionar;
 - analise do historico em `analise_precos.ipynb` (pandas: menor preco do dia por produto);
 - consulta rapida por `query.py`.
 
@@ -111,7 +112,7 @@ price-agent/
 |-- analise_precos.ipynb  # analise do historico com pandas
 |-- query.py           # consulta menor preco
 |-- setup_db.py        # inicializa o banco e cadastra produtos
-|-- inspect_db.py      # mostra produtos, ofertas e alertas
+|-- inspect_db.py      # mostra produtos, ofertas, alertas e falhas de scrape
 |-- record_offer.py    # registra oferta manual para teste/MVP
 |-- scrapers/
 |   |-- amazon.py      # HTML via Playwright
@@ -144,6 +145,7 @@ flowchart LR
         TO[offers]
         TA[alerts]
         TPR[prices]
+        TF[scrape_failures]
     end
 
     M -->|upsert_product| TP
@@ -152,8 +154,8 @@ flowchart LR
     M -->|preço <= alvo ou queda >= 15%| N[notifier.py]
     N --> T[Telegram / console]
 
-    R -.->|falha de scrape| LOG[log no console - NAO persiste]
-    LOG -.-> N
+    M -->|falha de scrape| TF
+    TF -.->|N falhas seguidas| N
 
     TPR --> Q[query.py]
 ```

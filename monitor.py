@@ -1,19 +1,35 @@
 import argparse
 import json
 import logging
+import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from dotenv import load_dotenv
 
-from database import create_db, get_last_price, save_price, upsert_product
-from notifier import send_drop_alert, send_scrape_error, send_target_alert
-from scrapers import get_price
+from database import (
+    count_consecutive_failures,
+    create_db,
+    get_last_price,
+    record_scrape_failure,
+    save_price,
+    upsert_product,
+)
+from notifier import (
+    send_drop_alert,
+    send_scrape_error,
+    send_scrape_recovered,
+    send_target_alert,
+)
+from scrapers import get_scraper
 
 load_dotenv()
 
 PRODUCTS_FILE = Path(__file__).parent / "products.json"
 DROP_THRESHOLD_PCT = 15.0
+# Falhas seguidas de scrape antes de avisar no Telegram (uma vez por sequencia).
+FAILURE_ALERT_AFTER = max(1, int(os.getenv("SCRAPE_FAILURE_ALERT_AFTER", "3")))
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,6 +60,28 @@ def decide_alerts(
     return hit_target, pct_drop
 
 
+def should_alert_failure(consecutive: int, threshold: int) -> bool:
+    """Avisa uma unica vez por sequencia de falhas: quando ela atinge o limite."""
+    return consecutive == threshold
+
+
+def scrape_recovered(failures_before: int, threshold: int) -> bool:
+    """O scraper voltou depois de uma sequencia que ja tinha gerado alerta."""
+    return failures_before >= threshold
+
+
+def store_from_url(url: str) -> str:
+    return urlparse(url).netloc.lower().removeprefix("www.")
+
+
+def handle_scrape_failure(name: str, url: str, reason: str) -> None:
+    log.warning("Preço não encontrado: %s (%s)", name, reason)
+    record_scrape_failure(name, url, store_from_url(url), reason)
+    consecutive = count_consecutive_failures(name)
+    if should_alert_failure(consecutive, FAILURE_ALERT_AFTER):
+        send_scrape_error(name, url, consecutive, reason)
+
+
 def check_product(item: dict) -> None:
     name = item["name"]
     upsert_product(item)
@@ -60,16 +98,26 @@ def check_product(item: dict) -> None:
         return
 
     log.info("Buscando preço: %s", name)
-    price = get_price(url)
+    # Loja sem scraper e erro de configuracao: o ValueError sobe para run().
+    scraper = get_scraper(url)
+    try:
+        price = scraper.scrape(url)
+        reason = "preco_nao_encontrado"
+    except Exception as e:  # rede, timeout, anti-bot, layout novo da pagina
+        log.exception("Scraper falhou: %s", name)
+        price = None
+        reason = f"{type(e).__name__}: {e}"[:300]
 
     if price is None:
-        log.warning("Preço não encontrado: %s", name)
-        send_scrape_error(name, url)
+        handle_scrape_failure(name, url, reason)
         return
 
+    failures_before = count_consecutive_failures(name)
     log.info("%s → R$ %.2f", name, price)
     previous = get_last_price(name)
     save_price(name, price)
+    if scrape_recovered(failures_before, FAILURE_ALERT_AFTER):
+        send_scrape_recovered(name, url, failures_before)
 
     hit_target, pct_drop = decide_alerts(price, target, previous)
     if hit_target:
@@ -91,8 +139,6 @@ def run() -> None:
 
 
 def run_scheduled() -> None:
-    import os
-
     hour = int(os.getenv("SCHEDULE_HOUR", "9"))
     minute = int(os.getenv("SCHEDULE_MINUTE", "0"))
 
